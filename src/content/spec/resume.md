@@ -5,19 +5,18 @@
 ## 基本信息
 
 - **姓名**：方中杰
-- **学历**：本科 · 武汉文理学院 · 计算机科学与技术 · 2026届
+- **学历**：本科 · 安徽信息工程学院 · 计算机科学与技术 · 2026届
 - **电话**：15671628271
 - **邮箱**：2093146753@qq.com
 - **地点**：武汉 / 全国 / 远程均可
 - **期望薪资**：8K 起
-- **在线系统**：[zgm2003.cn](https://zgm2003.cn)
-- **技术社区**：[Linux.do 三级用户](https://linux.do/u/zgm2003/summary)
+- **技术社区**：[Linux.do 三级用户]
 
 ---
 
 ## 个人定位
 
-我现在的技术定位不是“PHP 全栈”，也不是“只会前端”。更准确地说，我是一个以 **Go 后端和 Python AI 自动化为主线、前端能力很强的全栈工程师**。
+我现在的技术定位不是“全栈”，也不是“只会前端”。更准确地说，我是一个以 **Go 后端和 Python AI 自动化为主线、前端能力很强的全栈工程师**。
 
 Go 方向，我已经不是停留在语法或 CRUD Demo，而是在用 Gin / GORM / Redis 推进一个企业级 Admin 后端核心迁移：认证会话、RBAC、用户管理、角色授权、操作日志、队列监控、系统设置、上传配置、COS 上传 token、WebSocket baseline 和 smoke 验证都已经形成代码和测试闭环。
 
@@ -78,7 +77,7 @@ Python 方向，我把它放在 AI 应用、数据处理、自动化脚本和内
 
 ### 小药药医药科技有限公司 · 前端开发
 
-**时间**：2025.10.27 - 至今
+**时间**：2025.9.16 - 至今
 
 - 从 0 搭建公司 SaaS 商家端前端工程，覆盖 Web 独立运行与 Electron Desktop 打包运行两条链路。
 - 负责登录、租户/门店选择、总部/门店工作区切换、权限菜单、会话恢复、统一请求、状态管理和 CRUD 基础设施等核心工程能力。
@@ -134,32 +133,6 @@ Python 方向，我把它放在 AI 应用、数据处理、自动化脚本和内
 - 后端承接商品入库、图片选择、OCR 识别、Agent 生成卖点/口播词、TTS 合成和字幕文件下载。
 - 使用队列承载 OCR、AI、TTS 等耗时任务，为每个阶段设计状态流转，避免任务失败后只留下模糊的“生成失败”。
 - 该项目适合作为 Python / AI 应用方向证明：Python 负责 AI 工作流和自动化，Web 后台负责状态、权限和人工审核，形成真实业务闭环。
-
-### 智澜·TS 企业级 AI Admin 系统
-
-- **角色**：个人项目 / 独立设计与开发 / 已上线
-- **在线地址**：[https://zgm2003.cn](https://zgm2003.cn)
-- **技术栈**：Vue 3.5、TypeScript、Vite、Element Plus、Pinia、Vue Router、Vue I18n、Tauri 2、PHP 8.1+、Webman / Workerman、Eloquent、MySQL 8.4、Redis、Redis Queue、GatewayWorker、NeuronAI、Yansongda Pay、腾讯云 COS / TTS、阿里云 AIGC / TTS。
-
-#### 项目概述
-
-智澜·TS 是一套面向企业后台管理与 AI 能力集成的全栈 Admin 系统，包含认证权限、动态菜单、AI Agent、流式对话、IM 聊天、支付钱包、订单履约、上传存储、通知任务、导出任务、系统日志、Tauri 桌面端更新等能力。它证明我已经能用 PHP / Webman / Vue / Tauri 把复杂业务系统做上线，也为后续 Go 主后端迁移提供了真实业务事实。
-
-#### 核心贡献
-
-- **AI Agent 运行系统**：设计 Agent / Model / Tool / Prompt / Conversation / Message / Run / Step 数据模型，让一次 AI 调用从黑盒请求变成可追踪、可审计、可取消、可超时治理的运行过程。
-- **流式对话协议**：后端通过独立 SSE 服务输出 `conversation`、`run`、`content`、`tool_call`、`tool_result`、`done`、`error`、`canceled` 等事件；前端按事件驱动更新 UI。
-- **Tool 安全治理**：实现 Internal Tool、HTTPS 白名单 Tool、只读 SQL Tool 三类执行器；SQL 只允许 SELECT，拒绝写操作，并自动追加 LIMIT。
-- **认证权限体系**：实现 Access / Refresh Token、Token Hash + Pepper、Redis Session、单端登录、平台/设备/IP 绑定、RBAC 菜单/动态路由/按钮权限码。
-- **支付与订单闭环**：接入 Yansongda Pay，完成充值订单、支付流水、钱包入账、订单履约、支付回调、对账任务和定时补偿；使用 RedisLock 控制重复提交和回调并发。
-- **实时通信与异步任务**：封装 WebSocket 单例连接、GatewayWorker 推送、Redis Queue 消费者、AI 超时检测、通知调度、支付关单/同步/履约/对账任务。
-- **线上部署**：独立完成服务器部署、域名解析、HTTPS、Nginx 反代、MySQL / Redis 配置；线上服务拆分为 API `8787`、SSE `8788`、WebSocket `7272`。
-
-#### 可量化信息
-
-- 后端规模：**43 个 Controller、48 个 Module、46 个 Dep、47 个 Model、21 个 Service、10 个 Redis Queue 消费者**。
-- 运行边界：API、SSE、WebSocket、队列消费者、定时任务、Tauri 桌面端更新链路均已形成闭环。
-- 工程原则：前后端强契约，后端错就暴露，不靠前端空对象、空数组、静默 catch 掩盖协议问题。
 
 ### SaaS 商家端 Web / Desktop 一体化前端
 
@@ -228,7 +201,7 @@ AI Make 是我围绕 Figma Make 工作流沉淀的本地开发者 UI 生成 Skil
 
 ## 教育经历
 
-### 武汉文理学院 · 计算机科学与技术 · 本科
+### 安徽信息工程学院 · 计算机科学与技术 · 本科
 
 **毕业时间**：2026.06
 

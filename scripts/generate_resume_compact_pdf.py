@@ -164,7 +164,7 @@ def build_html() -> str:
     <section class="education">
       <h2>教育经历</h2>
       <div class="row-title">
-        <h3>武汉文理学院 · 计算机科学与技术 · 本科</h3>
+        <h3>安徽信息工程学院 · 计算机科学与技术 · 本科</h3>
         <span>2026.06 毕业</span>
       </div>
     </section>
