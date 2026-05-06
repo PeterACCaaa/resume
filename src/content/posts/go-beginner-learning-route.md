@@ -281,7 +281,7 @@ var userID int64 = 10001
 `string` 是字符串：
 
 ```go
-name := "左光明"
+name := "方中杰"
 ```
 
 `byte` 本质是 `uint8`，常用来处理原始字节。

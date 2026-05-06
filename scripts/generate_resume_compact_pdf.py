@@ -94,7 +94,7 @@ def build_html() -> str:
     body = f"""
     <header class="hero">
       <div>
-        <h1>左光明</h1>
+        <h1>方中杰</h1>
         <p class="role">AI Agent / Web 全栈工程师 · 2026届本科</p>
       </div>
       <div class="contact">
@@ -174,7 +174,7 @@ def build_html() -> str:
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
-  <title>左光明 - 简历投递版</title>
+  <title>方中杰 - 简历投递版</title>
   <style>
     @page {{
       size: A4;

@@ -9,7 +9,7 @@ import { LinkPreset } from "./types/config";
 
 // ========== 网站基础配置 ==========
 export const siteConfig: SiteConfig = {
-	title: "左光明",           // 网站标题
+	title: "方中杰",           // 网站标题
 	subtitle: "AI Agent / Web 全栈工程师",  // 副标题
 	lang: "zh_CN",              // 语言代码：zh_CN 中文, en 英文, ja 日文
 	themeColor: {
@@ -60,7 +60,7 @@ export const navBarConfig: NavBarConfig = {
 // ========== 个人资料配置 ==========
 export const profileConfig: ProfileConfig = {
 	avatar: "assets/images/demo-avatar.png",  // 头像路径，相对于 /src 目录；以 '/' 开头则相对于 /public 目录
-	name: "左光明",
+	name: "方中杰",
 	bio: "AI Agent / Web 全栈工程师",
 	links: [
 		{

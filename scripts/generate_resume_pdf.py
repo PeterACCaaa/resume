@@ -124,7 +124,7 @@ def build_html(body: str) -> str:
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
-  <title>左光明 - 简历</title>
+  <title>方中杰 - 简历</title>
   <style>
     @page {{
       size: A4;
