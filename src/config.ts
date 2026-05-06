@@ -72,12 +72,7 @@ export const profileConfig: ProfileConfig = {
 		{
 			name: "微信",
 			icon: "fa6-brands:weixin",
-			url: "/wechat-qr.png",
-		},
-		{
-			name: "QQ",
-			icon: "fa6-brands:qq",
-			url: "https://qm.qq.com/q/90mzzJHcBy",
+			url: "/WeChat.png",
 		},
 	],
 };
