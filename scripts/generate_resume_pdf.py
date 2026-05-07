@@ -34,6 +34,8 @@ def markdown_to_html(markdown: str) -> str:
     paragraph: list[str] = []
     in_list = False
     current_section = ""
+    open_section = False
+    open_block = False
 
     def flush_paragraph() -> None:
         nonlocal paragraph
@@ -47,9 +49,22 @@ def markdown_to_html(markdown: str) -> str:
             chunks.append("</ul>")
             in_list = False
 
+    def close_block() -> None:
+        nonlocal open_block
+        close_list()
+        if open_block:
+            chunks.append("</div>")
+            open_block = False
+
+    def close_section() -> None:
+        nonlocal open_section
+        close_block()
+        if open_section:
+            chunks.append("</section>")
+            open_section = False
+
     for raw in lines:
-        line = raw.rstrip()
-        stripped = line.strip()
+        stripped = raw.rstrip().strip()
 
         if not stripped:
             flush_paragraph()
@@ -58,15 +73,19 @@ def markdown_to_html(markdown: str) -> str:
 
         if stripped == "---":
             flush_paragraph()
-            close_list()
-            chunks.append('<hr class="section-rule" />')
+            close_block()
             continue
 
         if stripped.startswith("# "):
             flush_paragraph()
-            close_list()
-            title = inline_markdown(stripped[2:])
-            chunks.append(f'<header class="resume-hero"><h1>{title}</h1></header>')
+            close_section()
+            name, role = split_resume_title(inline_markdown(stripped[2:]))
+            chunks.append(
+                '<header class="resume-hero">'
+                f"<h1>{name}</h1>"
+                f'<p class="hero-role">{role}</p>'
+                "</header>"
+            )
             continue
 
         if stripped.startswith(">"):
@@ -82,10 +101,14 @@ def markdown_to_html(markdown: str) -> str:
             level = len(heading_match.group(1))
             title = inline_markdown(heading_match.group(2))
             if level == 2:
+                close_section()
                 current_section = re.sub(r"<[^>]+>", "", title)
                 chunks.append(f'<section class="section section-{slugify(current_section)}"><h2>{title}</h2>')
+                open_section = True
             elif level == 3:
+                close_block()
                 chunks.append(f'<div class="block"><h3>{title}</h3>')
+                open_block = True
             else:
                 chunks.append(f"<h4>{title}</h4>")
             continue
@@ -102,8 +125,15 @@ def markdown_to_html(markdown: str) -> str:
         paragraph.append(stripped)
 
     flush_paragraph()
-    close_list()
+    close_section()
     return "\n".join(chunks)
+
+
+def split_resume_title(title: str) -> tuple[str, str]:
+    parts = [part.strip() for part in title.split(" - ", 1)]
+    if len(parts) == 2 and all(parts):
+        return parts[0], parts[1]
+    return title, "个人简历"
 
 
 def slugify(text: str) -> str:
@@ -128,18 +158,18 @@ def build_html(body: str) -> str:
   <style>
     @page {{
       size: A4;
-      margin: 11mm 11mm 12mm;
+      margin: 9mm 10mm 10mm;
     }}
     * {{
       box-sizing: border-box;
     }}
     body {{
       margin: 0;
-      color: #111827;
+      color: #172033;
       background: white;
       font-family: "Source Han Sans CN", "Microsoft YaHei", "SimHei", "PingFang SC", sans-serif;
-      font-size: 10.2pt;
-      line-height: 1.55;
+      font-size: 9.35pt;
+      line-height: 1.48;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }}
@@ -151,82 +181,96 @@ def build_html(body: str) -> str:
       width: 100%;
     }}
     .resume-hero {{
-      padding: 0 0 7mm;
-      border-bottom: 2px solid #1f2937;
-      margin-bottom: 5mm;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: end;
+      column-gap: 5mm;
+      padding: 0 0 4.2mm;
+      border-bottom: 2px solid #0f172a;
+      margin-bottom: 3.2mm;
     }}
     h1 {{
       margin: 0;
-      font-size: 25pt;
-      line-height: 1.15;
+      font-size: 24pt;
+      line-height: 1;
       letter-spacing: 0.02em;
-      font-weight: 800;
+      font-weight: 900;
       color: #0f172a;
+    }}
+    .hero-role {{
+      margin: 0 0 0.8mm;
+      color: #1d4ed8;
+      font-size: 12.2pt;
+      line-height: 1.15;
+      font-weight: 800;
+      text-align: right;
     }}
     .tagline {{
-      margin: -2mm 0 5mm;
-      padding: 3mm 4mm;
+      margin: 0 0 3.2mm;
+      padding: 2.3mm 3.2mm;
       color: #334155;
-      background: #f1f5f9;
+      background: #f5f8fc;
       border-left: 3px solid #2563eb;
-      border-radius: 6px;
-      font-size: 10pt;
+      border-radius: 5px;
+      font-size: 9.05pt;
+      line-height: 1.46;
     }}
     h2 {{
-      margin: 7mm 0 3mm;
-      padding: 0 0 1.5mm;
+      margin: 4.6mm 0 2mm;
+      padding: 0 0 1mm;
       color: #0f172a;
-      border-bottom: 1px solid #dbe4f0;
-      font-size: 14pt;
-      line-height: 1.2;
-      font-weight: 800;
+      border-bottom: 1px solid #d7e0ec;
+      font-size: 12.5pt;
+      line-height: 1.15;
+      font-weight: 900;
       page-break-after: avoid;
     }}
     h2::before {{
       content: "";
       display: inline-block;
       width: 3px;
-      height: 13px;
-      margin-right: 7px;
+      height: 11px;
+      margin-right: 6px;
       vertical-align: -1px;
       border-radius: 99px;
       background: #2563eb;
     }}
     h3 {{
-      margin: 4.5mm 0 1.5mm;
+      margin: 3.2mm 0 1.1mm;
       color: #111827;
-      font-size: 11.5pt;
-      font-weight: 800;
+      font-size: 10.35pt;
+      font-weight: 900;
       page-break-after: avoid;
     }}
     h4 {{
-      margin: 3.2mm 0 1.2mm;
+      margin: 2.2mm 0 0.9mm;
       color: #0f172a;
-      font-size: 10.4pt;
-      font-weight: 800;
+      font-size: 9.45pt;
+      font-weight: 850;
       page-break-after: avoid;
     }}
     p {{
-      margin: 0 0 2.2mm;
+      margin: 0 0 1.35mm;
     }}
     strong {{
       font-weight: 800;
       color: #0f172a;
     }}
     code {{
-      padding: 0.2mm 1mm;
+      padding: 0.1mm 0.8mm;
       border-radius: 3px;
       color: #1d4ed8;
       background: #eff6ff;
       font-family: "JetBrains Mono", "Consolas", monospace;
-      font-size: 8.7pt;
+      font-size: 7.9pt;
+      line-height: 1.35;
     }}
     ul {{
-      margin: 0 0 2.5mm 0;
+      margin: 0 0 1.65mm 0;
       padding-left: 4.5mm;
     }}
     li {{
-      margin: 0 0 1.3mm;
+      margin: 0 0 0.78mm;
       padding-left: 0.5mm;
     }}
     li::marker {{
@@ -235,12 +279,12 @@ def build_html(body: str) -> str:
     .info-grid {{
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 1.2mm 5mm;
-      margin: 0 0 4mm;
-      padding: 4mm;
+      gap: 0.9mm 5mm;
+      margin: 0 0 2.5mm;
+      padding: 2.8mm 3.4mm;
       list-style: none;
       border: 1px solid #e5e7eb;
-      border-radius: 8px;
+      border-radius: 6px;
       background: #f8fafc;
     }}
     .info-grid li {{
@@ -248,22 +292,29 @@ def build_html(body: str) -> str:
       padding: 0;
     }}
     .block {{
-      page-break-inside: avoid;
-      break-inside: avoid;
-      margin-bottom: 2mm;
+      page-break-inside: auto;
+      break-inside: auto;
+      margin-bottom: 1.6mm;
     }}
     .section-rule {{
-      border: 0;
-      border-top: 1px dashed #cbd5e1;
-      margin: 5mm 0;
+      display: none;
     }}
     .section-projects .block {{
       page-break-inside: auto;
       break-inside: auto;
     }}
     .section-projects h3 {{
-      padding-top: 1mm;
-      border-top: 1px solid #edf2f7;
+      padding-top: 1.4mm;
+      border-top: 1px solid #e8eef6;
+    }}
+    .section-basic h2 {{
+      margin-top: 0;
+    }}
+    .section-positioning p {{
+      color: #1f2937;
+    }}
+    .section-skills .block {{
+      margin-bottom: 1.2mm;
     }}
     @media screen {{
       body {{
@@ -273,7 +324,7 @@ def build_html(body: str) -> str:
         width: 210mm;
         min-height: 297mm;
         margin: 16px auto;
-        padding: 11mm;
+        padding: 9mm 10mm 10mm;
         background: white;
         box-shadow: 0 12px 36px rgba(15, 23, 42, 0.12);
       }}
