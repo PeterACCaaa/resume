@@ -50,6 +50,11 @@ export const navBarConfig: NavBarConfig = {
 			external: false,
 		},
 		{
+			name: "简历问答",
+			url: "/resume-chat/",
+			external: false,
+		},
+		{
 			name: "GitHub",
 			url: "https://github.com/zgm2003",
 			external: true,

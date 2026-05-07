@@ -1,1 +1,7 @@
-{}
+{
+	"functions": {
+		"api/resume-chat.mjs": {
+			"includeFiles": "src/content/**/*.md"
+		}
+	}
+}

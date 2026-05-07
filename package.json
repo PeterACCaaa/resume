@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
+    "resume-chat": "node scripts/resume-chat-server.mjs",
     "start": "astro dev",
     "check": "astro check",
     "build": "astro build && pagefind --site dist",
