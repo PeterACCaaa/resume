@@ -11,9 +11,9 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE_MD = ROOT / "src" / "content" / "spec" / "resume.md"
 TMP_DIR = ROOT / "tmp" / "pdfs"
 OUT_DIR = ROOT / "output" / "pdf"
-HTML_OUT = TMP_DIR / "zuo-guangming-resume-print.html"
-PDF_OUT = OUT_DIR / "zuo-guangming-resume.pdf"
-PNG_OUT = TMP_DIR / "zuo-guangming-resume-preview.png"
+HTML_OUT = TMP_DIR / "fang-zhongjie-resume-print.html"
+PDF_OUT = OUT_DIR / "fang-zhongjie-resume.pdf"
+PNG_OUT = TMP_DIR / "fang-zhongjie-resume-preview.png"
 
 
 def inline_markdown(text: str) -> str:

@@ -9,9 +9,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 TMP_DIR = ROOT / "tmp" / "pdfs"
 OUT_DIR = ROOT / "output" / "pdf"
-HTML_OUT = TMP_DIR / "zuo-guangming-resume-compact.html"
-PNG_OUT = TMP_DIR / "zuo-guangming-resume-compact-preview.png"
-PDF_OUT = OUT_DIR / "zuo-guangming-resume-compact.pdf"
+HTML_OUT = TMP_DIR / "fang-zhongjie-resume-compact.html"
+PNG_OUT = TMP_DIR / "fang-zhongjie-resume-compact-preview.png"
+PDF_OUT = OUT_DIR / "fang-zhongjie-resume-compact.pdf"
 
 
 def esc(text: str) -> str:
