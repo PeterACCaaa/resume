@@ -92,6 +92,29 @@ Python 方向，我把它放在 AI 应用、数据处理、自动化脚本和内
 
 ## 项目经历
 
+### 个人简历智能问答系统
+
+- **角色**：个人项目 / AI 应用工程化 / 前后端集成与部署
+- **技术栈**：Astro、Svelte、TypeScript、Node.js、Nginx、宝塔面板、OpenAI-compatible API、Responses API、Markdown。
+- **相关复盘**：[个人简历智能问答系统：从静态网站到 AI 问答服务](/posts/resume-ai-chat-system/)
+
+#### 项目概述
+
+该项目是在个人博客与简历网站上新增的 AI 问答能力。它不是前端直连模型 API，而是把 `resume.md` 和技术博客 Markdown 作为知识来源，由服务端 Node API 读取资料、约束 Prompt、调用 OpenAI-compatible 中转服务，再通过 Svelte 聊天页面回答招聘场景中的项目经历、技术栈、岗位匹配度和简历亮点问题。
+
+#### 核心工作
+
+- 新增 `/resume-chat/` 智能问答页面，基于 Svelte 实现聊天 UI、常用问题入口、Loading、错误提示和移动端适配。
+- 设计 Node.js 问答 API，读取 `src/content/spec/resume.md` 与 `src/content/posts/*.md`，将简历和博客内容组织成受控上下文，再通过 Responses API 生成回答。
+- 抽出 `resume-chat-core` 共享模块，让本地开发服务、Vercel Serverless API 和宝塔线上 Node 服务复用同一套模型调用、上下文读取、响应解析和错误处理逻辑。
+- 通过 `OPENAI_API_KEY`、`OPENAI_MODEL`、`OPENAI_BASE_URL` 环境变量管理模型配置，支持 `code.hahacode.top` 这类 OpenAI-compatible 中转服务，避免 API Key 暴露在浏览器端。
+- 兼容 Responses API 与中转服务返回格式差异，统一处理 `output_text`、`output[].content[].text` 和 `choices[].message.content`，避免“请求成功但页面无答案”的问题。
+- 在线上宝塔部署中，将 Astro 静态站与 Node API 服务拆分部署，并通过 Nginx 将 `/api/resume-chat` 反向代理到 `127.0.0.1:8787`，形成同域访问和服务端密钥隔离。
+
+#### 求职价值
+
+这个项目体现的是 AI 应用落地能力：从 Markdown 知识源、Prompt 约束、OpenAI-compatible 接入、模型返回解析，到前端交互、服务端密钥隔离和宝塔/Nginx 部署闭环。它说明我不会把 AI 应用停留在“前端调接口”，而是能把模型能力接进真实网站并处理网络、密钥、部署和错误边界。
+
 ### Admin Go 主后端 Core Foundation 迁移
 
 - **角色**：个人项目 / Go 主后端架构与核心实现 / 既有 PHP Admin 系统并行重构
@@ -195,6 +218,7 @@ AI Make 是我围绕 Figma Make 工作流沉淀的本地开发者 UI 生成 Skil
 - [Go Admin Core Foundation：从 PHP 迁移到 Gin Modular Monolith](/posts/go-admin-architecture-design/)
 - [Go 语言基本学习路线：从变量到项目入门](/posts/go-beginner-learning-route/)
 - [从调 API 到 Agent 工程化：把 AI 能力做成可治理系统](/posts/ai-agent-engineering-practice/)
+- [个人简历智能问答系统：从静态网站到 AI 问答服务](/posts/resume-ai-chat-system/)
 - [Agent 工程学习路线：从 LLM 到可上线智能体系统](/posts/understanding-ai-ecosystem/)
 - [电商 AI 口播生成系统：OCR、Agent、TTS 与队列闭环](/posts/ecommerce-ai-script-generation/)
 - [Webman 分层架构：Controller 到 Model 的边界治理](/posts/webman-layered-architecture/)
