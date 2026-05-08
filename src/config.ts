@@ -84,7 +84,7 @@ export const profileConfig: ProfileConfig = {
 
 // ========== 文章版权配置 ==========
 export const licenseConfig: LicenseConfig = {
-	enable: true,               // 是否显示版权信息
+	enable: false,              // 是否显示版权信息
 	name: "CC BY-NC-SA 4.0",    // 许可证名称
 	url: "https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans",  // 许可证链接（中文版）
 };
