@@ -56,7 +56,7 @@ export const navBarConfig: NavBarConfig = {
 		},
 		{
 			name: "GitHub",
-			url: "https://github.com/zgm2003",
+			url: "https://github.com/PeterACCaaa",
 			external: true,
 		},
 	],
