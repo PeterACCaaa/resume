@@ -1,14 +1,13 @@
 <script lang="ts">
 import Icon from "@iconify/svelte";
+import { tick } from "svelte";
 
 type ChatMessage = {
 	role: "user" | "assistant";
 	content: string;
 };
 
-const API_URL = import.meta.env.DEV
-	? "http://localhost:8787/api/resume-chat"
-	: "/api/resume-chat";
+const API_URL = import.meta.env.DEV ? getDevApiUrl() : "/api/resume-chat";
 const suggestions = [
 	"他有哪些 Go 后端项目经验？",
 	"他做过哪些 AI Agent 或自动化项目？",
@@ -19,6 +18,8 @@ const suggestions = [
 let question = "";
 let loading = false;
 let error = "";
+let messageListElement: HTMLDivElement;
+let scrollFrame = 0;
 let messages: ChatMessage[] = [
 	{
 		role: "assistant",
@@ -27,6 +28,39 @@ let messages: ChatMessage[] = [
 	},
 ];
 
+function updateMessage(index: number, content: string): void {
+	messages = messages.map((message, currentIndex) =>
+		currentIndex === index ? { ...message, content } : message,
+	);
+	scrollToBottom();
+}
+
+async function scrollToBottom(): Promise<void> {
+	await tick();
+
+	if (!messageListElement) return;
+
+	if (scrollFrame) {
+		cancelAnimationFrame(scrollFrame);
+	}
+
+	scrollFrame = requestAnimationFrame(() => {
+		messageListElement.scrollTo({
+			top: messageListElement.scrollHeight,
+			behavior: "smooth",
+		});
+		scrollFrame = 0;
+	});
+}
+
+function getDevApiUrl(): string {
+	if (typeof window === "undefined") {
+		return "http://localhost:8787/api/resume-chat";
+	}
+
+	return `${window.location.protocol}//${window.location.hostname}:8787/api/resume-chat`;
+}
+
 async function ask(text = question): Promise<void> {
 	const trimmed = text.trim();
 	if (!trimmed || loading) return;
@@ -34,7 +68,13 @@ async function ask(text = question): Promise<void> {
 	error = "";
 	question = "";
 	loading = true;
-	messages = [...messages, { role: "user", content: trimmed }];
+	const assistantIndex = messages.length + 1;
+	messages = [
+		...messages,
+		{ role: "user", content: trimmed },
+		{ role: "assistant", content: "" },
+	];
+	scrollToBottom();
 
 	try {
 		const response = await fetch(API_URL, {
@@ -45,31 +85,115 @@ async function ask(text = question): Promise<void> {
 			body: JSON.stringify({ question: trimmed }),
 		});
 
-		const data = await response.json();
-		if (!response.ok) {
+		if (!response.ok || !response.body) {
+			const data = await response.json().catch(() => null);
 			throw new Error(data?.error || "请求失败");
 		}
 
-		messages = [
-			...messages,
-			{
-				role: "assistant",
-				content: data.answer || "没有获得有效回答。",
-			},
-		];
+		const answer = await readAnswerStream(response.body, (delta) => {
+			const current = messages[assistantIndex]?.content || "";
+			updateMessage(assistantIndex, current + delta);
+		});
+
+		if (!answer.trim()) {
+			updateMessage(assistantIndex, "没有获得有效回答。");
+		}
 	} catch (err) {
 		error = err instanceof Error ? err.message : String(err);
-		messages = [
-			...messages,
-			{
-				role: "assistant",
-				content:
-					"问答服务暂时不可用。开发环境请确认 `resume-chat` 服务已启动；线上环境请检查部署环境变量。",
-			},
-		];
+		updateMessage(
+			assistantIndex,
+			"问答服务暂时不可用。开发环境请确认 `resume-chat` 服务已启动；线上环境请检查部署环境变量。",
+		);
 	} finally {
 		loading = false;
 	}
+}
+
+async function readAnswerStream(
+	stream: ReadableStream<Uint8Array>,
+	onDelta: (delta: string) => void,
+): Promise<string> {
+	const reader = stream.getReader();
+	const decoder = new TextDecoder();
+	let buffer = "";
+	let answer = "";
+
+	try {
+		while (true) {
+			const { value, done } = await reader.read();
+			if (done) break;
+
+			buffer += decoder.decode(value, { stream: true });
+			const blocks = buffer.split(/\r?\n\r?\n/);
+			buffer = blocks.pop() || "";
+
+			for (const block of blocks) {
+				const event = parseSseBlock(block);
+				answer += handleAnswerStreamEvent(event, onDelta);
+			}
+		}
+
+		buffer += decoder.decode();
+		if (buffer.trim()) {
+			const event = parseSseBlock(buffer);
+			answer += handleAnswerStreamEvent(event, onDelta);
+		}
+
+		return answer;
+	} finally {
+		reader.releaseLock();
+	}
+}
+
+function handleAnswerStreamEvent(
+	event: { type: string; payload: Record<string, unknown> } | null,
+	onDelta: (delta: string) => void,
+): string {
+	if (!event) return "";
+
+	if (event.type === "delta") {
+		const delta = String(event.payload?.text || "");
+		onDelta(delta);
+		return delta;
+	}
+
+	if (event.type === "error") {
+		throw new Error(getErrorMessage(event.payload));
+	}
+
+	return "";
+}
+
+function getErrorMessage(payload: Record<string, unknown>): string {
+	return typeof payload.message === "string"
+		? payload.message
+		: "问答服务暂时不可用";
+}
+
+function parseSseBlock(
+	block: string,
+): { type: string; payload: Record<string, unknown> } | null {
+	let type = "message";
+	const dataLines: string[] = [];
+
+	for (const line of block.split(/\r?\n/)) {
+		if (!line || line.startsWith(":")) continue;
+
+		const separatorIndex = line.indexOf(":");
+		const field = separatorIndex === -1 ? line : line.slice(0, separatorIndex);
+		let value = separatorIndex === -1 ? "" : line.slice(separatorIndex + 1);
+		if (value.startsWith(" ")) value = value.slice(1);
+
+		if (field === "event") type = value;
+		if (field === "data") dataLines.push(value);
+	}
+
+	if (!dataLines.length) return null;
+
+	return {
+		type,
+		payload: JSON.parse(dataLines.join("\n")),
+	};
 }
 
 function handleKeydown(event: KeyboardEvent): void {
@@ -89,7 +213,7 @@ function handleKeydown(event: KeyboardEvent): void {
 		{/each}
 	</div>
 
-	<div class="message-list" aria-live="polite">
+	<div class="message-list" aria-live="polite" bind:this={messageListElement}>
 		{#each messages as message}
 			<div class:from-user={message.role === "user"} class="message-row">
 				<div class="message-bubble">
@@ -101,7 +225,7 @@ function handleKeydown(event: KeyboardEvent): void {
 			<div class="message-row">
 				<div class="message-bubble loading">
 					<Icon icon="material-symbols:progress-activity" />
-					正在读取简历资料并生成回答
+					正在生成回答
 				</div>
 			</div>
 		{/if}
@@ -117,7 +241,7 @@ function handleKeydown(event: KeyboardEvent): void {
 			on:keydown={handleKeydown}
 			placeholder="例如：他有哪些 AI 工程化经验？"
 			rows="2"
-		/>
+		></textarea>
 		<button type="submit" disabled={loading || !question.trim()} aria-label="发送">
 			<Icon icon="material-symbols:send-rounded" />
 		</button>

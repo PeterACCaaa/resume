@@ -2,12 +2,12 @@
 title: "个人简历智能问答系统：从静态网站到 AI 问答服务"
 published: 2026-05-07T08:00:00Z
 draft: false
-tags: [置顶, AI, 简历, Astro, Svelte, Node.js, 部署]
-description: "复盘如何把静态 Astro 简历网站扩展成 AI 问答系统：Markdown 知识源、Node API、OpenAI-compatible 中转、响应解析和宝塔 Nginx 部署。"
+tags: [置顶, AI, 简历, Astro, Svelte, Node.js, SSE, 部署]
+description: "复盘如何把静态 Astro 简历网站扩展成 AI 问答系统：Markdown 知识源、Node API、OpenAI-compatible 中转、SSE 流式输出和宝塔 Nginx 部署。"
 category: AI 技术
 ---
 
-> **本文价值**：这篇文章记录的是一个小功能背后的完整工程闭环。重点不是“接入 GPT API”，而是怎样把 AI 能力放进真实个人网站里，同时处理密钥隔离、知识资料组织、本地开发、线上部署和错误边界。
+> **本文价值**：这篇文章记录的是一个小功能背后的完整工程闭环。重点不是“接入 GPT API”，而是怎样把 AI 能力放进真实个人网站里，同时处理密钥隔离、知识资料组织、SSE 流式输出、本地开发、线上部署和错误边界。
 
 # 项目背景
 
@@ -135,7 +135,62 @@ choices[].message.content
 
 这类细节很小，但它决定了 AI 功能到底是“Demo 能跑”还是“部署后能排查”。
 
-# 6. 本地开发和线上部署分开处理
+# 6. 从一次性回答升级到 SSE 流式输出
+
+第一版接口是“等模型完整生成后，再一次性返回 JSON”。这种方式实现简单，但用户体验不好：问题提交后页面会长时间停在 Loading，直到完整答案返回才出现内容。
+
+所以我把接口改成了 SSE 流式输出：
+
+```text
+浏览器 fetch + ReadableStream
+  -> Node API 输出 text/event-stream
+  -> streamResumeAnswer()
+  -> OpenAI Responses API stream=true
+  -> response.output_text.delta
+```
+
+服务端请求模型时打开 `stream: true`，然后解析 OpenAI 返回的 SSE 事件，只关心文本增量：
+
+```text
+response.output_text.delta
+```
+
+再把它转换成前端更简单的事件格式：
+
+```text
+event: delta
+data: {"text":"..."}
+
+event: done
+data: {}
+
+event: error
+data: {"message":"..."}
+```
+
+这样做有两个好处：
+
+1. 前端不用理解 OpenAI 原始事件结构；
+2. 本地 Node 服务、Vercel Serverless API 和宝塔 Node 服务可以复用同一套流式解析逻辑。
+
+前端没有用 `EventSource`，因为这个问答接口需要 `POST` JSON body，而原生 `EventSource` 更适合 `GET`。所以我用的是：
+
+```text
+fetch -> response.body.getReader() -> TextDecoder -> SSE block parser
+```
+
+每收到一个 `delta`，就把文本追加到当前 assistant 消息气泡里。为了避免消息增长后用户还停留在旧位置，我又加了自动滚动：
+
+```text
+messages 更新
+  -> tick() 等 DOM 渲染完成
+  -> requestAnimationFrame()
+  -> messageList.scrollTo(scrollHeight)
+```
+
+这里的细节是：不能在改完 `messages` 后立刻读 `scrollHeight`，因为 Svelte 还没把新内容渲染到 DOM。先 `tick()`，再滚动，才稳定。
+
+# 7. 本地开发和线上部署分开处理
 
 本地开发时，我用一个 Node 服务跑 API：
 
@@ -153,7 +208,7 @@ http://localhost:8787/api/resume-chat
 
 ```ts
 const API_URL = import.meta.env.DEV
-  ? "http://localhost:8787/api/resume-chat"
+  ? `${window.location.protocol}//${window.location.hostname}:8787/api/resume-chat`
   : "/api/resume-chat";
 ```
 
@@ -163,9 +218,17 @@ const API_URL = import.meta.env.DEV
 /api/resume-chat
 ```
 
-这样前端代码不用关心当前部署在哪里。
+这里后来踩过一个坑：如果页面用 `127.0.0.1:4321`、局域网 IP 或手机预览打开，而 API 固定请求 `localhost:8787`，再加上本地 Node 服务只允许 `http://localhost:4321`，浏览器就会直接报：
 
-# 7. 宝塔部署：静态站 + Node API + Nginx 反代
+```text
+Failed to fetch
+```
+
+这不是模型失败，也不是服务端逻辑错，而是浏览器 CORS 或网络地址不匹配。最后我把开发环境 API 地址改成跟随当前页面 `hostname`，并让本地 Node 服务按请求 `Origin` 动态允许 `localhost / 127.0.0.1 / 局域网 IP` 的 Astro 开发来源。
+
+这个问题的经验是：本地开发不能只考虑“我的电脑 localhost 能跑”，还要考虑手机预览、不同 host、不同端口和 CORS 预检请求。
+
+# 8. 宝塔部署：静态站 + Node API + Nginx 反代
 
 我的网站是宝塔面板部署，不是纯 Vercel Serverless。因此线上最终结构是：
 
@@ -191,12 +254,22 @@ location /api/resume-chat {
     proxy_connect_timeout 60s;
     proxy_send_timeout 120s;
     proxy_read_timeout 120s;
+
+    proxy_buffering off;
+    proxy_cache off;
 }
 ```
 
 这里不需要把 Node 项目暴露到公网，也不需要给 `8787` 放行端口。浏览器只访问主域名，Nginx 在服务器内部转发到 Node 服务。
 
-# 8. 这个项目证明了什么
+升级到 SSE 后，Nginx 还要注意不要缓存或缓冲响应。否则模型虽然在服务端流式生成，但 Nginx 可能攒一段再吐给浏览器，页面就又变回“等很久后一次性出现”。所以我加了：
+
+```nginx
+proxy_buffering off;
+proxy_cache off;
+```
+
+# 9. 这个项目证明了什么
 
 这个功能不是大型系统，但它覆盖了 AI 应用落地里很实际的一圈：
 
@@ -205,9 +278,13 @@ location /api/resume-chat {
 - OpenAI-compatible API 调用；
 - 中转服务适配；
 - Responses API 返回结构兼容；
+- SSE 流式输出；
+- `fetch + ReadableStream` 前端增量渲染；
 - Svelte 聊天交互；
+- 消息自动滚动和移动端体验；
 - 静态站与 Node API 拆分部署；
 - Nginx 同域反代；
+- 本地 CORS 和多 host 调试；
 - 错误提示和部署排查。
 
 它对我的求职价值也很明确：我不是只会在页面里放一个聊天框，而是能把 AI 能力放进真实网站，处理从前端体验到服务端安全、模型调用、网络中转和部署运维的完整闭环。
