@@ -2,7 +2,7 @@
 title: "个人简历智能问答系统：从静态网站到 AI 问答服务"
 published: 2026-05-07T08:00:00Z
 draft: false
-tags: [AI, 简历, Astro, Svelte, Node.js, 部署]
+tags: [置顶, AI, 简历, Astro, Svelte, Node.js, 部署]
 description: "复盘如何把静态 Astro 简历网站扩展成 AI 问答系统：Markdown 知识源、Node API、OpenAI-compatible 中转、响应解析和宝塔 Nginx 部署。"
 category: AI 技术
 ---

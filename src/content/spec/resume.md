@@ -215,10 +215,10 @@ AI Make 是我围绕 Figma Make 工作流沉淀的本地开发者 UI 生成 Skil
 
 ## 技术文章 / 证明材料
 
+- [个人简历智能问答系统：从静态网站到 AI 问答服务](/posts/resume-ai-chat-system/)
 - [Go Admin Core Foundation：从 PHP 迁移到 Gin Modular Monolith](/posts/go-admin-architecture-design/)
 - [Go 语言基本学习路线：从变量到项目入门](/posts/go-beginner-learning-route/)
 - [从调 API 到 Agent 工程化：把 AI 能力做成可治理系统](/posts/ai-agent-engineering-practice/)
-- [个人简历智能问答系统：从静态网站到 AI 问答服务](/posts/resume-ai-chat-system/)
 - [Agent 工程学习路线：从 LLM 到可上线智能体系统](/posts/understanding-ai-ecosystem/)
 - [电商 AI 口播生成系统：OCR、Agent、TTS 与队列闭环](/posts/ecommerce-ai-script-generation/)
 - [Webman 分层架构：Controller 到 Model 的边界治理](/posts/webman-layered-architecture/)
