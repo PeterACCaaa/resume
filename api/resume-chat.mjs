@@ -1,9 +1,4 @@
-import {
-	collectMarkdownContext,
-	streamResumeAnswer,
-} from "../src/server/resume-chat-core.mjs";
-
-const KNOWLEDGE_CONTEXT = collectMarkdownContext(process.cwd());
+import { streamResumeAnswer } from "../src/server/resume-chat-core.mjs";
 
 function sendJson(res, statusCode, payload) {
 	res.statusCode = statusCode;
@@ -39,9 +34,7 @@ export default async function handler(req, res) {
 		}
 
 		startSse(res);
-		for await (const delta of streamResumeAnswer(question, {
-			context: KNOWLEDGE_CONTEXT,
-		})) {
+		for await (const delta of streamResumeAnswer(question)) {
 			writeSse(res, "delta", { text: delta });
 		}
 		writeSse(res, "done");

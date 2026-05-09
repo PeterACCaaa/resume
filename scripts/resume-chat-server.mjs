@@ -1,12 +1,10 @@
 import http from "node:http";
 import {
-	collectMarkdownContext,
 	getResumeChatConfig,
 	streamResumeAnswer,
 } from "../src/server/resume-chat-core.mjs";
 
 const PORT = Number(process.env.RESUME_CHAT_PORT || 8787);
-const KNOWLEDGE_CONTEXT = collectMarkdownContext();
 
 function getAllowedOrigin(req) {
 	const origin = req?.headers?.origin;
@@ -95,9 +93,7 @@ const server = http.createServer(async (req, res) => {
 		}
 
 		startSse(req, res);
-		for await (const delta of streamResumeAnswer(question, {
-			context: KNOWLEDGE_CONTEXT,
-		})) {
+		for await (const delta of streamResumeAnswer(question)) {
 			writeSse(res, "delta", { text: delta });
 		}
 		writeSse(res, "done");

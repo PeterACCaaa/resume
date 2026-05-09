@@ -87,20 +87,23 @@
 ### 个人简历智能问答系统
 
 - **角色**：个人项目 / AI Agent 问答系统 / 全栈集成与部署
-- **技术栈**：Astro、Svelte、TypeScript、Node.js、SSE、Nginx、宝塔面板、OpenAI-compatible API、Responses API、Markdown
+- **技术栈**：Astro、Svelte、TypeScript、Node.js、SSE、Nginx、宝塔面板、OpenAI-compatible API、Responses API、Markdown、轻量上下文选择
 - **相关复盘**：[个人简历智能问答系统：从静态网站到 AI 问答服务](/posts/resume-ai-chat-system/)
 
 #### 项目概述
 
-在个人博客与简历网站上新增 AI 问答能力。系统把 `resume.md` 和技术博客 Markdown 作为知识来源，由服务端 Node API 读取资料、约束 Prompt、调用 OpenAI-compatible 中转服务，再通过 Svelte 聊天页面以流式输出方式回答招聘场景中的项目经历、技术栈、岗位匹配度和简历亮点问题。
+在个人博客与简历网站上新增 AI 问答能力。系统把 `resume.md` 和技术博客 Markdown 作为知识来源，由服务端 Node API 动态选择上下文、约束 Prompt、调用 OpenAI-compatible 中转服务，再通过 Svelte 聊天页面以流式输出方式回答招聘场景中的项目经历、技术栈、岗位匹配度和简历亮点问题。
 
 #### 核心工作
 
 - 新增 `/resume-chat/` 智能问答页面，基于 Svelte 实现聊天 UI、常用问题入口、Loading、错误提示、移动端适配和消息自动滚动。
-- 设计 Node.js 问答 API，读取 `src/content/spec/resume.md` 与 `src/content/posts/*.md`，将简历和博客内容组织成受控上下文，再通过 Responses API 生成回答。
-- 抽出 `resume-chat-core` 共享模块，让本地开发服务、Vercel Serverless API 和宝塔线上 Node 服务复用同一套模型调用、上下文读取、响应解析和错误处理逻辑。
+- 设计 Node.js 问答 API，读取 `src/content/spec/resume.md` 与 `src/content/posts/*.md`，将简历和博客内容组织成带来源标记的受控上下文，再通过 Responses API 生成回答。
+- 抽出 `resume-chat-core` 与 `resume-context-selector` 共享模块，让本地开发服务、Vercel Serverless API 和宝塔线上 Node 服务复用同一套模型调用、上下文选择、响应解析和错误处理逻辑。
+- 实现轻量上下文选择边界：始终保留完整 `resume.md` 作为事实底座，按问题相关性选择最多 5 篇技术文章补充；低置信度问题回退到全部博客，避免综合能力类回答被 TopN 检索截窄。
+- 优化 Prompt 输出约束，要求模型使用清晰中文短段落和“字段：内容”表达；在用户问题需要时充分展开项目背景、职责范围、技术栈、工程难点、交付内容和岗位匹配点，同时禁止编造资料中没有的信息。
 - 将一次性 JSON 响应升级为 SSE 流式输出：服务端请求 Responses API 时启用 `stream: true`，解析 `response.output_text.delta` 后转发为前端统一消费的 `delta / done / error` 事件。
 - 前端使用 `fetch + ReadableStream + TextDecoder` 读取事件流，边接收边追加 assistant 气泡内容，并通过 `tick()` 与 `requestAnimationFrame` 在提问和回答增量更新后自动滚动到底部。
+- 前端对 assistant 回复做受控结构化展示：清理模型偶尔输出的 Markdown 标记，将“字段：内容”解析成带标签的信息块；不直接渲染模型返回 HTML，降低 XSS 和样式失控风险。
 - 通过 `OPENAI_API_KEY`、`OPENAI_MODEL`、`OPENAI_BASE_URL` 环境变量管理模型配置，支持 OpenAI-compatible 中转服务，避免 API Key 暴露在浏览器端。
 - 兼容 Responses API 与中转服务返回格式差异，统一处理 `output_text`、`output[].content[].text` 和 `choices[].message.content`，避免“请求成功但页面无答案”的问题。
 - 处理本地开发 CORS 与地址差异：开发环境 API 地址跟随当前页面 hostname，本地 Node 服务按请求 Origin 允许 `localhost / 127.0.0.1 / 局域网 IP` 的 Astro 开发来源。
@@ -108,7 +111,7 @@
 
 #### 求职价值
 
-该项目体现 AI Agent 和全栈落地能力：从 Markdown 知识源、Prompt 约束、OpenAI-compatible 接入、模型返回解析、SSE 流式输出，到前端交互、服务端密钥隔离和宝塔/Nginx 部署闭环。
+该项目体现 AI Agent 和全栈落地能力：从 Markdown 知识源、轻量上下文选择、Prompt 约束、OpenAI-compatible 接入、模型返回解析、SSE 流式输出，到前端结构化展示、服务端密钥隔离和宝塔/Nginx 部署闭环。
 
 ### SaaS 商家端 Web / Desktop 一体化前端
 

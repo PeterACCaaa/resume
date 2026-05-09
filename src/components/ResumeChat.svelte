@@ -7,6 +7,12 @@ type ChatMessage = {
 	content: string;
 };
 
+type FormattedMessageBlock = {
+	kind: "paragraph" | "item";
+	text: string;
+	label?: string;
+};
+
 const API_URL = import.meta.env.DEV ? getDevApiUrl() : "/api/resume-chat";
 const suggestions = [
 	"他有哪些 Go 后端项目经验？",
@@ -202,6 +208,84 @@ function handleKeydown(event: KeyboardEvent): void {
 		ask();
 	}
 }
+
+// AI 回复仍按文本接收，再在前端解析为受控结构。
+// 这样可以兼容模型偶尔输出 Markdown 的情况，同时避免用 {@html} 直接渲染不可信内容。
+// 返回结构只有 paragraph 和 item 两类，样式完全由当前组件控制，后续改版不会依赖模型输出 HTML。
+function formatAssistantMessage(content: string): FormattedMessageBlock[] {
+	const blocks: FormattedMessageBlock[] = [];
+	let paragraphLines: string[] = [];
+
+	const flushParagraph = () => {
+		const text = cleanInlineText(paragraphLines.join(" "));
+		if (text) blocks.push({ kind: "paragraph", text });
+		paragraphLines = [];
+	};
+
+	for (const rawLine of content.replace(/\r\n/g, "\n").split("\n")) {
+		const line = rawLine.trim();
+		if (!line || /^[-*_]{3,}$/.test(line)) {
+			flushParagraph();
+			continue;
+		}
+
+		const normalizedLine = line.replace(/^#{1,6}\s+/, "").replace(/^>\s*/, "");
+		// 兼容模型仍然输出列表符号的情况：去掉项目符号，只保留正文参与结构化展示。
+		const itemMatch = normalizedLine.match(/^(?:[-*+]\s+|\d+[.)]\s+)(.+)$/);
+		if (itemMatch) {
+			flushParagraph();
+			blocks.push(createMessageItem(itemMatch[1]));
+			continue;
+		}
+
+		// Prompt 会尽量要求“字段：内容”，这里把这种行渲染成带标签的答案项。
+		if (isLabeledLine(normalizedLine)) {
+			flushParagraph();
+			blocks.push(createMessageItem(normalizedLine));
+			continue;
+		}
+
+		paragraphLines.push(normalizedLine);
+	}
+
+	flushParagraph();
+	return blocks.length
+		? blocks
+		: [{ kind: "paragraph", text: cleanInlineText(content) }];
+}
+
+// 支持“字段：内容”格式，让招聘信息按清晰标签展示。
+// 标签长度限制在 2 到 14 个字符，避免普通长句里出现冒号时被误判成标签。
+function createMessageItem(text: string): FormattedMessageBlock {
+	const cleaned = cleanInlineText(text);
+	const labelMatch = cleaned.match(/^([^：:]{2,14})[：:]\s*(.+)$/);
+
+	if (!labelMatch) {
+		return { kind: "item", text: cleaned };
+	}
+
+	return {
+		kind: "item",
+		label: labelMatch[1].trim(),
+		text: labelMatch[2].trim(),
+	};
+}
+
+function isLabeledLine(text: string): boolean {
+	return /^([^：:]{2,14})[：:]\s*\S+/.test(cleanInlineText(text));
+}
+
+// 清理模型偶尔带出的 Markdown 标记，保留可读文本本身。
+// 这里只做保守文本替换，不解析任意 HTML，也不执行链接或脚本，保证聊天气泡展示可控。
+function cleanInlineText(text: string): string {
+	return text
+		.replace(/\*\*(.*?)\*\*/g, "$1")
+		.replace(/__(.*?)__/g, "$1")
+		.replace(/`([^`]+)`/g, "$1")
+		.replace(/\[(.*?)\]\([^)]+\)/g, "$1")
+		.replace(/[ \t]+/g, " ")
+		.trim();
+}
 </script>
 
 <section class="resume-chat-shell">
@@ -217,7 +301,24 @@ function handleKeydown(event: KeyboardEvent): void {
 		{#each messages as message}
 			<div class:from-user={message.role === "user"} class="message-row">
 				<div class="message-bubble">
-					{message.content}
+					{#if message.role === "assistant"}
+						<div class="assistant-answer">
+							{#each formatAssistantMessage(message.content) as block}
+								{#if block.kind === "item"}
+									<div class:has-label={Boolean(block.label)} class="answer-item">
+										{#if block.label}
+											<span class="answer-label">{block.label}</span>
+										{/if}
+										<span class="answer-text">{block.text}</span>
+									</div>
+								{:else}
+									<p class="answer-paragraph">{block.text}</p>
+								{/if}
+							{/each}
+						</div>
+					{:else}
+						{message.content}
+					{/if}
 				</div>
 			</div>
 		{/each}
@@ -330,6 +431,37 @@ function handleKeydown(event: KeyboardEvent): void {
 		color: white;
 	}
 
+	.assistant-answer {
+		display: flex;
+		flex-direction: column;
+		gap: 0.55rem;
+	}
+
+	.answer-paragraph {
+		margin: 0;
+	}
+
+	.answer-item {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 0.2rem;
+	}
+
+	.answer-item.has-label {
+		grid-template-columns: max-content minmax(0, 1fr);
+		gap: 0.55rem;
+	}
+
+	.answer-label {
+		color: var(--primary);
+		font-weight: 800;
+		white-space: nowrap;
+	}
+
+	.answer-text {
+		min-width: 0;
+	}
+
 	.loading {
 		display: inline-flex;
 		align-items: center;
@@ -408,6 +540,11 @@ function handleKeydown(event: KeyboardEvent): void {
 
 		.message-bubble {
 			max-width: 94%;
+		}
+
+		.answer-item.has-label {
+			grid-template-columns: 1fr;
+			gap: 0.15rem;
 		}
 	}
 </style>
