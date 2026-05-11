@@ -1,0 +1,21 @@
+---
+import ImageGenerator from "@components/ImageGenerator.svelte";
+import MainGridLayout from "../layouts/MainGridLayout.astro";
+---
+
+<MainGridLayout
+	title="AI 图片生成"
+	description="用户自带 API Key 的在线图片生成工具，支持文生图、图生图和本地历史记录。"
+>
+	<div class="flex min-h-32 w-full overflow-hidden rounded-[var(--radius-large)] relative">
+		<div class="card-base z-10 w-full px-4 py-6 relative md:px-6">
+			<div class="mb-6">
+				<h1 class="mb-2 text-2xl font-bold text-90 md:text-3xl">AI 图片生成</h1>
+				<p class="text-sm leading-7 text-50 md:text-base">
+					BYOK 模式：使用访问者自己输入的 API Key，浏览器直连所填 Base URL；Key 不会提交到本站服务端。
+				</p>
+			</div>
+			<ImageGenerator client:only="svelte" />
+		</div>
+	</div>
+</MainGridLayout>
