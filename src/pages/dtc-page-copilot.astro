@@ -1,0 +1,238 @@
+---
+import DtcPageCopilot from "@components/DtcPageCopilot.svelte";
+---
+
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta
+			name="description"
+			content="AI 商品页体验生成器是一个面向品牌出海和 Shopify section 思路的 DTC 页面生成 Demo。"
+		/>
+		<link
+			rel="icon"
+			href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231f7a6d'/%3E%3Ctext x='32' y='39' text-anchor='middle' font-family='Arial' font-size='18' font-weight='700' fill='white'%3EDTC%3C/text%3E%3C/svg%3E"
+		/>
+		<title>AI 商品页体验生成器 | DTC Demo</title>
+	</head>
+	<body>
+		<div class="app-page">
+			<header class="app-header">
+				<a class="brand" href="/dtc-page-copilot/" aria-label="AI 商品页体验生成器">
+					<span class="brand-mark">DTC</span>
+					<span>
+						<strong>AI 商品页体验生成器</strong>
+						<small>独立站页面内容工作台</small>
+					</span>
+				</a>
+
+				<nav aria-label="演示页导航">
+					<a href="/resume/">简历</a>
+					<a href="/resume-chat/">AI 简历问答</a>
+					<a href="/">博客</a>
+				</nav>
+			</header>
+
+			<main class="app-main">
+				<section class="intro">
+					<p class="kicker">作品集演示 / DTC / Shopify 模块化页面</p>
+					<h1>AI 商品页体验生成器</h1>
+					<p>
+						输入商品 Brief，生成独立站页面结构、商品页预览和 Shopify-like sections JSON。
+						这个页面作为独立演示存在，后续可以从博客中迁移到单独项目。
+					</p>
+				</section>
+
+				<DtcPageCopilot client:load />
+			</main>
+		</div>
+	</body>
+</html>
+
+<style>
+	:global(*) {
+		box-sizing: border-box;
+	}
+
+	:global(html) {
+		background: #eef3ef;
+		color: #14231f;
+		font-family:
+			Inter,
+			ui-sans-serif,
+			system-ui,
+			-apple-system,
+			BlinkMacSystemFont,
+			"Segoe UI",
+			sans-serif;
+	}
+
+	:global(body) {
+		margin: 0;
+		min-width: 320px;
+		background:
+			linear-gradient(135deg, rgb(31 122 109 / 0.12), transparent 28rem),
+			linear-gradient(180deg, #f7faf6 0%, #e9efea 100%);
+	}
+
+	:global(a) {
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.app-page {
+		min-height: 100vh;
+		padding: 1rem;
+	}
+
+	.app-header,
+	.app-main {
+		width: min(100%, 1440px);
+		margin: 0 auto;
+	}
+
+	.app-header {
+		position: fixed;
+		top: 1rem;
+		left: 50%;
+		z-index: 50;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		width: min(calc(100% - 2rem), 1440px);
+		border: 1px solid rgb(20 35 31 / 0.08);
+		border-radius: 0.8rem;
+		background: rgb(255 255 255 / 0.78);
+		padding: 0.75rem;
+		transform: translateX(-50%);
+		backdrop-filter: blur(18px);
+		box-shadow: 0 1.2rem 3rem rgb(20 35 31 / 0.08);
+	}
+
+	.brand,
+	.app-header nav {
+		display: flex;
+		align-items: center;
+	}
+
+	.brand {
+		gap: 0.7rem;
+		min-width: 0;
+	}
+
+	.brand-mark {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 2.6rem;
+		height: 2.6rem;
+		border-radius: 0.65rem;
+		background: #1f7a6d;
+		color: white;
+		font-size: 0.8rem;
+		font-weight: 900;
+		letter-spacing: 0;
+	}
+
+	.brand strong,
+	.brand small {
+		display: block;
+	}
+
+	.brand strong {
+		font-size: 1rem;
+		font-weight: 900;
+	}
+
+	.brand small {
+		margin-top: 0.12rem;
+		color: rgb(20 35 31 / 0.56);
+		font-size: 0.78rem;
+		font-weight: 700;
+	}
+
+	.app-header nav {
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		gap: 0.45rem;
+	}
+
+	.app-header nav a {
+		border-radius: 0.55rem;
+		padding: 0.65rem 0.8rem;
+		color: rgb(20 35 31 / 0.68);
+		font-size: 0.9rem;
+		font-weight: 800;
+		transition:
+			background-color 0.2s ease,
+			color 0.2s ease;
+	}
+
+	.app-header nav a:hover {
+		background: rgb(31 122 109 / 0.1);
+		color: #1f7a6d;
+	}
+
+	.app-main {
+		padding: 7.5rem 0 4rem;
+	}
+
+	.intro {
+		margin-bottom: 1.25rem;
+	}
+
+	.kicker {
+		margin: 0 0 0.65rem;
+		color: #1f7a6d;
+		font-size: 0.78rem;
+		font-weight: 900;
+		letter-spacing: 0;
+		text-transform: uppercase;
+	}
+
+	.intro h1 {
+		margin: 0;
+		max-width: 58rem;
+		font-size: clamp(2.2rem, 5vw, 4.8rem);
+		font-weight: 950;
+		line-height: 0.98;
+		letter-spacing: 0;
+	}
+
+	.intro p:last-child {
+		margin: 1rem 0 0;
+		max-width: 52rem;
+		color: rgb(20 35 31 / 0.66);
+		font-size: clamp(1rem, 1.8vw, 1.18rem);
+		line-height: 1.75;
+	}
+
+	@media (max-width: 760px) {
+		.app-page {
+			padding: 0.75rem;
+		}
+
+		.app-header {
+			top: 0.75rem;
+			align-items: flex-start;
+			flex-direction: column;
+			width: min(calc(100% - 1.5rem), 1440px);
+		}
+
+		.app-header nav {
+			justify-content: flex-start;
+			width: 100%;
+		}
+
+		.app-header nav a {
+			background: rgb(20 35 31 / 0.055);
+		}
+
+		.app-main {
+			padding-top: 10.75rem;
+		}
+	}
+</style>

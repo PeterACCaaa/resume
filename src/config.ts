@@ -55,6 +55,11 @@ export const navBarConfig: NavBarConfig = {
 			external: false,
 		},
 		{
+			name: "DTC Demo",
+			url: "/dtc-page-copilot/",
+			external: false,
+		},
+		{
 			name: "GitHub",
 			url: "https://github.com/PeterACCaaa",
 			external: true,

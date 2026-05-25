@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "resume-chat": "node scripts/resume-chat-server.mjs",
+    "dtc-copilot": "node scripts/dtc-page-copilot-server.mjs",
     "start": "astro dev",
     "check": "astro check",
     "build": "astro build && pagefind --site dist",
