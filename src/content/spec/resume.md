@@ -114,6 +114,35 @@
 
 该项目体现 AI Agent 和全栈落地能力：从 Markdown 知识源、轻量上下文选择、Prompt 约束、OpenAI-compatible 接入、模型返回解析、SSE 流式输出，到前端结构化展示、服务端密钥隔离和宝塔/Nginx 部署闭环。
 
+### AI PR Review Assistant
+
+- **角色**：七牛云 XEngineer 命题项目 / 个人实现 / AI 代码评审工作台
+- **技术栈**：React 19、TypeScript、Vite、Node.js、GitHub REST API、OpenAI-compatible Responses API、GSAP、规则扫描、Prompt 约束、Markdown Report
+- **相关复盘**：[AI PR Review Assistant：把 Pull Request 变成风险地图](/posts/ai-pr-review-assistant/)
+
+#### 项目概述
+
+围绕 GitHub Pull Request 代码评审场景，实现一个 AI PR Review 助手。系统输入真实 GitHub PR 链接后，先拉取 PR metadata、changed files 和 patch，再用确定性规则生成风险地图，补全高风险文件 base/head 上下文，最后调用 OpenAI-compatible 大模型生成中文 AI Review、人工复核清单和可复制到 GitHub PR 的 Markdown 评论。
+
+#### 核心工作
+
+- 设计 `/api/analyze-pr`、`/api/ai-review`、`/api/ai-followup` 三段式后端接口：分析 PR、生成 AI Review、围绕本次结论继续追问。
+- 封装 GitHub PR 解析与数据拉取，校验 `https://github.com/owner/repo/pull/123` 链接格式，读取 PR 标题、作者、状态、base/head 分支、变更文件、增删行和 patch 摘要。
+- 实现确定性规则扫描，不直接把完整 diff 丢给模型；规则覆盖认证/权限路径、安全敏感路径、数据库 schema、CI/部署、依赖文件、测试删除、大 PR、大文件、疑似硬编码密钥、`eval`、空 `catch` 和 SQL 字符串拼接。
+- 为每条风险 finding 输出等级、类别、文件位置、证据、影响、建议、复核方式和置信度，让 AI Review 前已经有可追溯的审查重点。
+- 实现高风险文件上下文补全：按风险等级挑选最多 6 个文件，分别拉取 base/head 两侧内容；对新增文件支持从 patch 重建 head 内容，并标记 missing、loaded、error、truncated 等状态。
+- 设计 AI Review Prompt 和 JSON 输出协议，要求模型只基于 PR 上下文、changed files、风险地图和 file contexts 判断，输出 summary、verdict、keyRisks、reviewerChecklist 和 commentMarkdown。
+- 支持快速、标准、深度三种 Review 模式，并将 Security、Tests、Maintainability、Performance、Frontend、Backend 作为可选 Review Skills 注入模型上下文。
+- 兼容 OpenAI-compatible 服务端配置，模型、base URL、reasoning effort 和 text verbosity 全部由服务端 `.env` 控制，前端只传业务模式和技能选择。
+- 加固密钥边界：`/api/ai-review` 和 `/api/ai-followup` 拒绝客户端传入 `apiKey`、`baseUrl`、`model` 等字段，避免浏览器覆盖服务端模型配置。
+- 设计 AI Review 追问线程：服务端保存本次 report、review、mode、skills 和线程消息，设置 TTL、上下文数量上限与每线程消息上限，追问时携带原 PR、风险地图、AI 结论和历史消息。
+- 前端实现中文审查工作台，按概览、优先级、文件、AI Review、Markdown 输出组织信息；支持风险分布、变更文件、上下文状态、Review Skills 选择、结论追问和评论复制。
+- 补充定向测试：覆盖模型返回内容解析、Responses/Chat Completions 兼容、base URL 规范化、review mode 映射、skills 去重过滤，以及新增文件 patch fallback 的上下文补全。
+
+#### 求职价值
+
+该项目体现我对 AI Agent 工程化的理解：模型不是第一步，规则定位、证据结构、上下文补全、Prompt 约束、输出协议、服务端密钥隔离、追问状态管理和前端工作台展示，才共同决定一个 AI Review 工具是否可解释、可复核、可演示、可继续扩展。
+
 ### SaaS 商家端 Web / Desktop 一体化前端
 
 - **角色**：公司项目 / 前端架构与核心开发 / 从 0 搭建
@@ -213,6 +242,7 @@
 ## 技术文章 / 证明材料
 
 - [个人简历智能问答系统：从静态网站到 AI 问答服务](/posts/resume-ai-chat-system/)
+- [AI PR Review Assistant：把 Pull Request 变成风险地图](/posts/ai-pr-review-assistant/)
 - [Go Admin Core Foundation：从 PHP 迁移到 Gin Modular Monolith](/posts/go-admin-architecture-design/)
 - [Go 语言基本学习路线：从变量到项目入门](/posts/go-beginner-learning-route/)
 - [从调 API 到 Agent 工程化：把 AI 能力做成可治理系统](/posts/ai-agent-engineering-practice/)
@@ -236,5 +266,5 @@
 
 - **前端能承接复杂业务**：做过 React / Vue 后台工程、uni-app 移动端、Vant H5、Electron 桌面端、权限菜单、状态管理和跨端运行。
 - **后端能力有项目证据**：Go Admin 迁移覆盖认证会话、RBAC、用户管理、队列、上传、WebSocket、日志和测试门禁。
-- **AI Agent 不是只调接口**：做过简历问答系统和电商内容自动化流水线，覆盖知识源、Prompt、模型接入、流式输出、任务队列、人工审核和部署闭环。
+- **AI Agent 不是只调接口**：做过简历问答系统、AI PR Review 助手和电商内容自动化流水线，覆盖知识源、规则扫描、证据结构、Prompt、模型接入、流式输出、任务队列、人工审核和部署闭环。
 - **全栈能形成闭环**：能把前端交互、后端接口、AI 工具链、部署链路和线上问题排查串起来交付。
